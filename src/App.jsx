@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchAllItems, fetchOrders, getTopOrders, getMedianPrice, getRecommendation } from './api';
+import { fetchAllItems, fetchOrders, getTopOrders, getMedianPrice, getRecommendation, getJWT, setJWT, createSellOrder } from './api';
 import './App.css';
 
 function App() {
@@ -22,6 +22,59 @@ function App() {
   const [results, setResults] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  // JWT auth
+  const [jwtToken, setJwtToken] = useState(getJWT());
+  const [jwtInput, setJwtInput] = useState('');
+  const [showLogin, setShowLogin] = useState(!getJWT());
+
+  // Sell order form state: keyed by item slug
+  const [listingForm, setListingForm] = useState(null); // { slug, price, quantity }
+  const [listingStatus, setListingStatus] = useState({}); // { [slug]: { type, message } }
+
+  const handleLogin = useCallback(() => {
+    const token = jwtInput.trim();
+    if (!token) return;
+    setJWT(token);
+    setJwtToken(token);
+    setJwtInput('');
+    setShowLogin(false);
+  }, [jwtInput]);
+
+  const handleLogout = useCallback(() => {
+    setJWT('');
+    setJwtToken('');
+    setShowLogin(true);
+  }, []);
+
+  const openListingForm = useCallback((item) => {
+    setListingForm({
+      slug: item.slug,
+      itemId: item.id,
+      name: item.name,
+      price: item.sellMedian || item.platValue || 1,
+      quantity: 1,
+    });
+    setListingStatus((prev) => {
+      const next = { ...prev };
+      delete next[item.slug];
+      return next;
+    });
+  }, []);
+
+  const submitListing = useCallback(async () => {
+    if (!listingForm) return;
+    const { slug, itemId, price, quantity } = listingForm;
+    setListingStatus((prev) => ({ ...prev, [slug]: { type: 'loading', message: 'Posting...' } }));
+    setListingForm(null);
+
+    try {
+      await createSellOrder({ itemId, platinum: price, quantity });
+      setListingStatus((prev) => ({ ...prev, [slug]: { type: 'success', message: `Listed for ${price}p` } }));
+    } catch (err) {
+      setListingStatus((prev) => ({ ...prev, [slug]: { type: 'error', message: err.message } }));
+    }
+  }, [listingForm]);
 
   // Load all items on mount
   useEffect(() => {
@@ -209,6 +262,40 @@ function App() {
         <p className="subtitle">
           Analyze your inventory • Find what to sell, ducat, or trash
         </p>
+        <div className="auth-section">
+          {jwtToken ? (
+            <div className="auth-status">
+              <span className="auth-connected">Connected to warframe.market</span>
+              <button className="btn-text auth-logout" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : showLogin ? (
+            <div className="auth-login">
+              <button className="btn-text auth-toggle" onClick={() => setShowLogin(false)}>
+                Login to list items for sale
+              </button>
+              <div className="auth-form">
+                <input
+                  type="password"
+                  className="auth-input"
+                  placeholder="Paste JWT token from warframe.market cookies"
+                  value={jwtInput}
+                  onChange={(e) => setJwtInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                />
+                <button className="btn btn-primary btn-sm" onClick={handleLogin}>
+                  Save
+                </button>
+              </div>
+              <p className="auth-hint">
+                DevTools → Application → Cookies → warframe.market → JWT
+              </p>
+            </div>
+          ) : (
+            <button className="btn-text auth-toggle" onClick={() => setShowLogin(true)}>
+              Login to list items for sale
+            </button>
+          )}
+        </div>
       </header>
 
       <main className="main">
@@ -354,6 +441,7 @@ function App() {
                     <th>Plat Value</th>
                     <th>Ducats</th>
                     <th>Recommendation</th>
+                    {jwtToken && <th>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -400,6 +488,43 @@ function App() {
                           {item.recommendation.label}
                         </span>
                       </td>
+                      {jwtToken && (
+                        <td className="action-cell">
+                          {listingForm?.slug === item.slug ? (
+                            <div className="listing-form">
+                              <input
+                                type="number"
+                                className="listing-input"
+                                min="1"
+                                value={listingForm.price}
+                                onChange={(e) => setListingForm((f) => ({ ...f, price: e.target.value }))}
+                                placeholder="Price"
+                              />
+                              <span className="listing-plat">p</span>
+                              <input
+                                type="number"
+                                className="listing-input listing-qty"
+                                min="1"
+                                value={listingForm.quantity}
+                                onChange={(e) => setListingForm((f) => ({ ...f, quantity: e.target.value }))}
+                              />
+                              <button className="btn btn-primary btn-xs" onClick={submitListing}>Post</button>
+                              <button className="btn-text" onClick={() => setListingForm(null)}>Cancel</button>
+                            </div>
+                          ) : listingStatus[item.slug] ? (
+                            <span className={`listing-status listing-${listingStatus[item.slug].type}`}>
+                              {listingStatus[item.slug].message}
+                            </span>
+                          ) : (
+                            <button
+                              className="btn btn-sell btn-xs"
+                              onClick={() => openListingForm(item)}
+                            >
+                              List for Sale
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

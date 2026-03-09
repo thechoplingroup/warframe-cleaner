@@ -545,6 +545,154 @@
   color: var(--accent-red);
 }
 
+/* Auth Section */
+.auth-section {
+  margin-top: 1rem;
+}
+
+.auth-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.auth-connected {
+  font-size: 0.8rem;
+  color: var(--accent-green);
+  font-weight: 500;
+}
+
+.auth-logout {
+  color: var(--text-muted) !important;
+  font-size: 0.75rem !important;
+}
+
+.auth-logout:hover {
+  color: var(--accent-red) !important;
+}
+
+.auth-toggle {
+  color: var(--accent-blue) !important;
+  font-size: 0.8rem !important;
+}
+
+.auth-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.auth-form {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 480px;
+  width: 100%;
+}
+
+.auth-input {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.auth-input:focus {
+  border-color: var(--accent-blue);
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+.auth-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.btn-sm {
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+}
+
+.btn-xs {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.btn-sell {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.btn-sell:hover {
+  background: rgba(74, 222, 128, 0.25);
+}
+
+/* Listing Form */
+.action-cell {
+  white-space: nowrap;
+}
+
+.listing-form {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.listing-input {
+  width: 60px;
+  padding: 0.25rem 0.4rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+}
+
+.listing-input:focus {
+  border-color: var(--accent-blue);
+}
+
+.listing-qty {
+  width: 40px;
+}
+
+.listing-plat {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+}
+
+.listing-status {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.listing-success {
+  color: var(--accent-green);
+}
+
+.listing-error {
+  color: var(--accent-red);
+}
+
+.listing-loading {
+  color: var(--accent-blue);
+}
+
 /* Footer */
 .footer {
   padding: 1.5rem 2rem;

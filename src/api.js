@@ -73,3 +73,55 @@ export function getRecommendation(platValue, ducatValue) {
   if (ducatValue >= 45) return { label: 'Ducat worthy ⭐', priority: 1, type: 'ducat' };
   return { label: 'Junk / Delete 🗑️', priority: 2, type: 'junk' };
 }
+
+// Warframe.market authentication & sell orders
+const WFM_V1 = '/api/wfm/v1';
+
+export function getJWT() {
+  return localStorage.getItem('wfm_jwt') || '';
+}
+
+export function setJWT(token) {
+  if (token) {
+    localStorage.setItem('wfm_jwt', token.trim());
+  } else {
+    localStorage.removeItem('wfm_jwt');
+  }
+}
+
+export async function createSellOrder({ itemId, platinum, quantity, rank, visible = true }) {
+  const jwt = getJWT();
+  if (!jwt) throw new Error('Not logged in — please enter your JWT token');
+
+  const body = {
+    order_type: 'sell',
+    item_id: itemId,
+    platinum: Number(platinum),
+    quantity: Number(quantity),
+    visible,
+  };
+  if (rank != null && rank !== '') {
+    body.rank = Number(rank);
+  }
+
+  const res = await fetch(`${WFM_V1}/profile/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; utf-8',
+      'Accept': 'application/json',
+      'Authorization': `JWT ${jwt}`,
+      'Platform': 'pc',
+      'Language': 'en',
+      'auth_type': 'header',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    if (res.status === 401) throw new Error('Invalid or expired JWT token');
+    throw new Error(`Failed to create order (${res.status}): ${text}`);
+  }
+
+  return res.json();
+}
